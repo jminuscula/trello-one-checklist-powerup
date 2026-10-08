@@ -1,0 +1,12 @@
+# OS
+.DS_Store
+
+# Vercel
+.vercel
+
+# Editors
+.vscode
+.idea
+
+# Generated configuration
+config.js
