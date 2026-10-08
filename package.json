@@ -1,0 +1,6 @@
+{
+  "name": "trello-one-checklist-powerup",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": { "build": "node scripts/generate-config.js" }
+}
