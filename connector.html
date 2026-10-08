@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Checklist Overview</title>
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <script src="./config.js"></script>
+</head>
+<body>
+<script>
+  const CONFIG = window.APP_CONFIG;
+
+  window.TrelloPowerUp.initialize({
+    'board-buttons': function (t) {
+      return [{
+        text: 'Checklists',
+        condition: 'always',
+        callback: function () {
+          return t.modal({
+            url: './app.html',
+            fullscreen: true,
+            title: 'Checklist Overview',
+            height: 700
+          });
+        }
+      }];
+    }
+  }, {
+    appKey: CONFIG.appKey,
+    appName: CONFIG.appName,
+    appAuthor: CONFIG.appAuthor
+  });
+</script>
+</body>
+</html>
