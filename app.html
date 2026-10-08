@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Checklist Overview</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <script src="./config.js"></script>
+</head>
+<body>
+<main class="app">
+  <header class="topbar">
+    <div>
+      <h1>Checklist Overview</h1>
+      <p id="subtitle">All checklist items on this board</p>
+    </div>
+    <button id="refresh" class="button secondary" type="button">↻ Refresh</button>
+  </header>
+
+  <section id="auth" class="panel hidden">
+    <h2>Authorize Trello access</h2>
+    <p>This Power-Up needs read/write access so it can display your checklists and let you complete items from this view.</p>
+    <button id="authorize" class="button primary" type="button">Authorize Trello access</button>
+  </section>
+
+  <section id="content" class="hidden">
+    <div class="toolbar">
+      <label class="search"><span>⌕</span><input id="search" type="search" placeholder="Search cards, checklists or items…"></label>
+      <div class="segmented" role="group" aria-label="Completion">
+        <button data-status="all" class="active" type="button">All</button>
+        <button data-status="open" type="button">☐ Open</button>
+        <button data-status="done" type="button">☑ Done</button>
+      </div>
+      <label class="checkbox-filter"><input id="mine" type="checkbox"> Me</label>
+    </div>
+    <div id="status" class="status"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="done-col">Done</th><th>Card</th><th>Checklist</th><th>Item</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div id="empty" class="empty hidden"><div class="empty-icon">☑</div><h2>No checklist items found</h2><p>Try changing your filters or adding checklists to cards.</p></div>
+  </section>
+
+  <div id="loading" class="loading">Loading…</div>
+  <div id="error" class="error hidden"></div>
+</main>
+<script src="./app.js"></script>
+</body>
+</html>
