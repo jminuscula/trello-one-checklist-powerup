@@ -50,27 +50,42 @@ async function load() {
   els.loading.classList.remove("hidden");
   els.content.classList.add("hidden");
   try {
-    const [cards, lists, member] = await Promise.all([
-      t.cards("id", "name", "url", "idList"),
-      t.lists("id", "name"),
-      t.member("id", "fullName")
+    // A board-level modal has no card context. Fetch board data through REST.
+    const boardId = await t.board("id");
+    const token = await apiClient.getToken();
+    if (!boardId?.id || !token) throw new Error("Unable to identify the board or access Trello. Please reauthorize.");
+
+    async function getBoardResource(path) {
+      const url = new URL(`https://api.trello.com/1/boards/${encodeURIComponent(boardId.id)}/${path}`);
+      url.searchParams.set("key", CONFIG.appKey);
+      url.searchParams.set("token", token);
+      const response = await fetch(url, { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error(`Trello API error (${response.status}) loading ${path}: ${await response.text()}`);
+      return response.json();
+    }
+
+    const [cards, lists, checklists, memberResponse] = await Promise.all([
+      getBoardResource("cards?fields=id,name,url,idList"),
+      getBoardResource("lists?fields=id,name"),
+      getBoardResource("checklists"),
+      fetch(`https://api.trello.com/1/members/me?key=${encodeURIComponent(CONFIG.appKey)}&token=${encodeURIComponent(token)}&fields=id`)
     ]);
-    state.currentMemberId = member?.id || null;
+    if (!memberResponse.ok) throw new Error(`Trello API error (${memberResponse.status}) loading member`);
+    const member = await memberResponse.json();
+    state.currentMemberId = member.id || null;
     const listMap = new Map(lists.map(list => [list.id, list.name]));
-    const fullCards = await Promise.all(cards.map(card =>
-      t.card(card.id, "id", "name", "url", "idList", "checklists")
-    ));
+    const cardMap = new Map(cards.map(card => [card.id, card]));
     state.items = [];
-    for (const card of fullCards) {
-      for (const checklist of (card.checklists || [])) {
-        for (const item of (checklist.checkItems || [])) {
-          state.items.push({
-            id: item.id, cardId: card.id, cardName: card.name, cardUrl: card.url,
-            listName: listMap.get(card.idList) || "Unknown list",
-            checklistId: checklist.id, checklistName: checklist.name,
-            name: item.name, state: item.state, idMember: item.idMember || null
-          });
-        }
+    for (const checklist of checklists) {
+      const card = cardMap.get(checklist.idCard);
+      if (!card) continue;
+      for (const item of (checklist.checkItems || [])) {
+        state.items.push({
+          id: item.id, cardId: card.id, cardName: card.name, cardUrl: card.url,
+          listName: listMap.get(card.idList) || "Unknown list",
+          checklistId: checklist.id, checklistName: checklist.name,
+          name: item.name, state: item.state, idMember: item.idMember || null
+        });
       }
     }
     els.subtitle.textContent = `${state.items.length} checklist item${state.items.length === 1 ? "" : "s"} on this board`;
