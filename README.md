@@ -5,10 +5,12 @@ A small, free Trello Power-Up that consolidates checklist items from all cards o
 ## Features
 
 - Search cards, lists, checklists, and items
-- Filter all/open/completed items
+- Filter all/open/completed items (defaults to open items)
+- Filter by Trello list (defaults to all lists)
 - Filter items assigned to the current member
 - Toggle checklist items directly from the overview
 - Open the underlying Trello card
+- Theme-aware board button icon and reusable app listing icon
 - Static deployment; no application backend or database
 
 ## Deployment
@@ -28,6 +30,7 @@ The Power-Up API key is not a user credential, but it is kept out of source cont
 3. Set the connector URL to the deployed `/connector.html`.
 4. Configure the Vercel `TRELLO_POWER_UP_KEY` variable with the Power-Up API key.
 5. Enable the Power-Up on a board.
+6. In Power-Up Admin → Basic Information, use the deployed `/icon.svg` URL as the Power-Up icon. The board button automatically uses `/icon-light.svg` and `/icon-dark.svg` for contrast on different board backgrounds.
 
 ## Local development
 
