@@ -59,7 +59,8 @@ async function load() {
   try {
     const board = await t.board("id");
     const token = await apiClient.getToken();
-    if (!board?.id || !token) throw new Error("Unable to identify the board or access Trello. Please reauthorize.");\n    state.boardId = board.id;
+    if (!board?.id || !token) throw new Error("Unable to identify the board or access Trello. Please reauthorize.");
+    state.boardId = board.id;
 
     async function getBoardResource(path) {
       const url = new URL(`https://api.trello.com/1/boards/${encodeURIComponent(board.id)}/${path}`);
