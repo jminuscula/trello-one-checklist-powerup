@@ -33,7 +33,13 @@ els.authorize.addEventListener("click", async () => {
 
 els.refresh.addEventListener("click", load);
 els.search.addEventListener("input", () => { state.search = els.search.value.trim().toLowerCase(); render(); });
-els.listFilter.addEventListener("change", () => {\n  state.listId = els.listFilter.value;\n  if (state.boardId) {\n    try { localStorage.setItem(`checklist-overview:list:${state.boardId}`, state.listId); } catch (_) {}\n  }\n  render();\n});
+els.listFilter.addEventListener("change", () => {
+  state.listId = els.listFilter.value;
+  if (state.boardId) {
+    try { localStorage.setItem(`checklist-overview:list:${state.boardId}`, state.listId); } catch (_) {}
+  }
+  render();
+});
 els.mine.addEventListener("change", () => { state.mine = els.mine.checked; render(); });
 
 document.querySelectorAll("[data-status]").forEach(button => {
@@ -98,7 +104,8 @@ async function load() {
 }
 
 function populateListFilter(lists) {
-  const selected = state.listId;
+  let selected = "all";
+  try { selected = localStorage.getItem(`checklist-overview:list:${state.boardId}`) || "all"; } catch (_) {}
   els.listFilter.replaceChildren();
   const allOption = document.createElement("option");
   allOption.value = "all";
