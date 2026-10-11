@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Checklist Overview</title>
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="stylesheet" href="./styles.css">
   <script src="https://p.trellocdn.com/power-up.min.js"></script>
   <script src="./config.js"></script>
@@ -11,9 +12,12 @@
 <body>
 <main class="app">
   <header class="topbar">
-    <div>
-      <h1>Checklist Overview</h1>
-      <p id="subtitle">All checklist items on this board</p>
+    <div class="brand">
+      <img class="app-icon" src="./icon.svg" alt="">
+      <div>
+        <h1>Checklist Overview</h1>
+        <p id="subtitle">All checklist items on this board</p>
+      </div>
     </div>
     <button id="refresh" class="button secondary" type="button">↻ Refresh</button>
   </header>
@@ -27,9 +31,10 @@
   <section id="content" class="hidden">
     <div class="toolbar">
       <label class="search"><span>⌕</span><input id="search" type="search" placeholder="Search cards, checklists or items…"></label>
+      <label class="list-filter"><span>List</span><select id="listFilter" aria-label="Filter by list"><option value="all">All lists</option></select></label>
       <div class="segmented" role="group" aria-label="Completion">
-        <button data-status="all" class="active" type="button">All</button>
-        <button data-status="open" type="button">☐ Open</button>
+        <button data-status="all" type="button">All</button>
+        <button data-status="open" class="active" type="button">☐ Open</button>
         <button data-status="done" type="button">☑ Done</button>
       </div>
       <label class="checkbox-filter"><input id="mine" type="checkbox"> Me</label>
