@@ -1,6 +1,6 @@
 const CONFIG = window.APP_CONFIG;
 const t = window.TrelloPowerUp.iframe({ appKey: CONFIG.appKey, appName: CONFIG.appName, appAuthor: CONFIG.appAuthor });
-const state = { items: [], status: "open", listId: "all", search: "", mine: false, currentMemberId: null, loading: false };
+const state = { items: [], status: "open", listId: "all", boardId: null, search: "", mine: false, currentMemberId: null, loading: false };
 const els = Object.fromEntries(["auth","content","authorize","refresh","search","listFilter","mine","rows","empty","loading","error","status","subtitle"].map(id => [id, document.getElementById(id)]));
 let apiClient;
 
@@ -33,7 +33,7 @@ els.authorize.addEventListener("click", async () => {
 
 els.refresh.addEventListener("click", load);
 els.search.addEventListener("input", () => { state.search = els.search.value.trim().toLowerCase(); render(); });
-els.listFilter.addEventListener("change", () => { state.listId = els.listFilter.value; render(); });
+els.listFilter.addEventListener("change", () => {\n  state.listId = els.listFilter.value;\n  if (state.boardId) {\n    try { localStorage.setItem(`checklist-overview:list:${state.boardId}`, state.listId); } catch (_) {}\n  }\n  render();\n});
 els.mine.addEventListener("change", () => { state.mine = els.mine.checked; render(); });
 
 document.querySelectorAll("[data-status]").forEach(button => {
@@ -53,7 +53,7 @@ async function load() {
   try {
     const board = await t.board("id");
     const token = await apiClient.getToken();
-    if (!board?.id || !token) throw new Error("Unable to identify the board or access Trello. Please reauthorize.");
+    if (!board?.id || !token) throw new Error("Unable to identify the board or access Trello. Please reauthorize.");\n    state.boardId = board.id;
 
     async function getBoardResource(path) {
       const url = new URL(`https://api.trello.com/1/boards/${encodeURIComponent(board.id)}/${path}`);
