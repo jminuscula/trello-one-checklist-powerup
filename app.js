@@ -1,7 +1,7 @@
 const CONFIG = window.APP_CONFIG;
 const t = window.TrelloPowerUp.iframe({ appKey: CONFIG.appKey, appName: CONFIG.appName, appAuthor: CONFIG.appAuthor });
-const state = { items: [], status: "all", search: "", mine: false, currentMemberId: null, loading: false };
-const els = Object.fromEntries(["auth","content","authorize","refresh","search","mine","rows","empty","loading","error","status","subtitle"].map(id => [id, document.getElementById(id)]));
+const state = { items: [], status: "open", listId: "all", search: "", mine: false, currentMemberId: null, loading: false };
+const els = Object.fromEntries(["auth","content","authorize","refresh","search","listFilter","mine","rows","empty","loading","error","status","subtitle"].map(id => [id, document.getElementById(id)]));
 let apiClient;
 
 document.addEventListener("DOMContentLoaded", init);
@@ -33,6 +33,7 @@ els.authorize.addEventListener("click", async () => {
 
 els.refresh.addEventListener("click", load);
 els.search.addEventListener("input", () => { state.search = els.search.value.trim().toLowerCase(); render(); });
+els.listFilter.addEventListener("change", () => { state.listId = els.listFilter.value; render(); });
 els.mine.addEventListener("change", () => { state.mine = els.mine.checked; render(); });
 
 document.querySelectorAll("[data-status]").forEach(button => {
@@ -50,13 +51,12 @@ async function load() {
   els.loading.classList.remove("hidden");
   els.content.classList.add("hidden");
   try {
-    // A board-level modal has no card context. Fetch board data through REST.
-    const boardId = await t.board("id");
+    const board = await t.board("id");
     const token = await apiClient.getToken();
-    if (!boardId?.id || !token) throw new Error("Unable to identify the board or access Trello. Please reauthorize.");
+    if (!board?.id || !token) throw new Error("Unable to identify the board or access Trello. Please reauthorize.");
 
     async function getBoardResource(path) {
-      const url = new URL(`https://api.trello.com/1/boards/${encodeURIComponent(boardId.id)}/${path}`);
+      const url = new URL(`https://api.trello.com/1/boards/${encodeURIComponent(board.id)}/${path}`);
       url.searchParams.set("key", CONFIG.appKey);
       url.searchParams.set("token", token);
       const response = await fetch(url, { headers: { Accept: "application/json" } });
@@ -67,13 +67,14 @@ async function load() {
     const [cards, lists, checklists, memberResponse] = await Promise.all([
       getBoardResource("cards?fields=id,name,url,idList"),
       getBoardResource("lists?fields=id,name"),
-      getBoardResource("checklists"),
+      getBoardResource("checklists?checkItems=all"),
       fetch(`https://api.trello.com/1/members/me?key=${encodeURIComponent(CONFIG.appKey)}&token=${encodeURIComponent(token)}&fields=id`)
     ]);
     if (!memberResponse.ok) throw new Error(`Trello API error (${memberResponse.status}) loading member`);
     const member = await memberResponse.json();
     state.currentMemberId = member.id || null;
     const listMap = new Map(lists.map(list => [list.id, list.name]));
+    populateListFilter(lists);
     const cardMap = new Map(cards.map(card => [card.id, card]));
     state.items = [];
     for (const checklist of checklists) {
@@ -82,7 +83,7 @@ async function load() {
       for (const item of (checklist.checkItems || [])) {
         state.items.push({
           id: item.id, cardId: card.id, cardName: card.name, cardUrl: card.url,
-          listName: listMap.get(card.idList) || "Unknown list",
+          listId: card.idList, listName: listMap.get(card.idList) || "Unknown list",
           checklistId: checklist.id, checklistName: checklist.name,
           name: item.name, state: item.state, idMember: item.idMember || null
         });
@@ -96,10 +97,28 @@ async function load() {
   finally { state.loading = false; }
 }
 
+function populateListFilter(lists) {
+  const selected = state.listId;
+  els.listFilter.replaceChildren();
+  const allOption = document.createElement("option");
+  allOption.value = "all";
+  allOption.textContent = "All lists";
+  els.listFilter.appendChild(allOption);
+  for (const list of lists) {
+    const option = document.createElement("option");
+    option.value = list.id;
+    option.textContent = list.name;
+    els.listFilter.appendChild(option);
+  }
+  els.listFilter.value = [...els.listFilter.options].some(option => option.value === selected) ? selected : "all";
+  state.listId = els.listFilter.value;
+}
+
 function filteredItems() {
   return state.items.filter(item => {
     if (state.status === "open" && item.state === "complete") return false;
     if (state.status === "done" && item.state !== "complete") return false;
+    if (state.listId !== "all" && item.listId !== state.listId) return false;
     if (state.mine && item.idMember !== state.currentMemberId) return false;
     if (state.search) {
       const haystack = [item.cardName, item.listName, item.checklistName, item.name].join(" ").toLowerCase();
